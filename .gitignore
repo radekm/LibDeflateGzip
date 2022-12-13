@@ -1,3 +1,6 @@
 /.idea/
 /*/bin/
 /*/obj/
+
+/deps/zig-cache
+/deps/zig-out
