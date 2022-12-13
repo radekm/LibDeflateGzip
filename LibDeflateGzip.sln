@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibDeflateGzip", "LibDeflateGzip\LibDeflateGzip.csproj", "{5D2136F5-DCDE-4C87-A4DB-4B04DAF3F498}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5D2136F5-DCDE-4C87-A4DB-4B04DAF3F498}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D2136F5-DCDE-4C87-A4DB-4B04DAF3F498}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D2136F5-DCDE-4C87-A4DB-4B04DAF3F498}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D2136F5-DCDE-4C87-A4DB-4B04DAF3F498}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
