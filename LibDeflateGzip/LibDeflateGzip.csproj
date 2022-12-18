@@ -4,6 +4,34 @@
         <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+        <PackageId>LibDeflateGzip</PackageId>
+        <PackageVersion>0.1.0</PackageVersion>
+        <Authors>Radek Micek</Authors>
+        <Copyright>Copyright (c) Radek Micek 2022</Copyright>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <Description>
+            Wrapper for gzip routines from libdeflate.
+        </Description>
+
+        <!-- Source Link -->
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     </PropertyGroup>
 
+    <!-- Source Link -->
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+    </ItemGroup>
+
+    <!-- Include native libraries in NuGet package -->
+    <ItemGroup>
+        <Content Include="runtimes\**\*">
+            <PackagePath>%(Identity)</PackagePath>
+            <Pack>true</Pack>
+        </Content>
+    </ItemGroup>
 </Project>
