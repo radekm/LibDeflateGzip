@@ -7,12 +7,12 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
         <PackageId>LibDeflateGzip</PackageId>
-        <PackageVersion>0.1.0</PackageVersion>
+        <PackageVersion>0.2.0</PackageVersion>
         <Authors>Radek Micek</Authors>
-        <Copyright>Copyright (c) Radek Micek 2022</Copyright>
+        <Copyright>Copyright (c) Radek Micek 2022-2023</Copyright>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Description>
-            Wrapper for gzip routines from libdeflate.
+            Wrapper for gzip routines from libdeflate v1.17.
             Native code either needs x86-64 processor with AVX2 instructions
             or M1 processor on Mac with ARM or Cortex-A53 on Linux with ARM.
             Windows with ARM is currently not supported.
