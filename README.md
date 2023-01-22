@@ -9,5 +9,5 @@ Windows with ARM is currently not supported.
 
 # Building native libraries
 
-1. Install Zig 0.10.
+1. Install Zig from commit `c0284e242`.
 2. Go into `deps` directory and run `./rebuild-all-archs.sh` from there.
