@@ -4,6 +4,7 @@ open System
 open System.Buffers
 open System.Diagnostics
 open System.IO
+open System.Text
 
 open NUnit.Framework
 
@@ -152,3 +153,23 @@ let ``iterate through members`` () =
     sw.Stop()
     printfn "Found %d members" count
     printfn "Elapsed millis %d" sw.ElapsedMilliseconds
+
+[<Test>]
+let ``gzip string`` () =
+    let decompressed = Encoding.UTF8.GetBytes("SIX.MIXED.PIXIES.SIFT.SIXTY.PIXIE.DUST.BOXES")
+    let compressed = Array.zeroCreate 1000
+    let decompressedAgain = Array.zeroCreate 1000
+
+    use compressor = new Compressor(9)
+    let n = compressor.Compress(decompressed.AsSpan(), compressed.AsSpan())
+
+    // Compression was successful.
+    Assert.Greater(n, 0)
+
+    use decompressor = new Decompressor()
+    let result, read, written = decompressor.Decompress(compressed.AsSpan(0, n), decompressedAgain.AsSpan())
+
+    Assert.AreEqual(DecompressionResult.Success, result)
+    Assert.AreEqual(n, read)
+    Assert.AreEqual(decompressed.Length, written)
+    Assert.IsTrue(decompressed.AsSpan().SequenceEqual(decompressedAgain.AsSpan(0, written)))
