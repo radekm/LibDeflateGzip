@@ -1,4 +1,6 @@
-﻿namespace LibDeflateGzip;
+﻿using System.Buffers;
+
+namespace LibDeflateGzip;
 
 using System.Runtime.InteropServices;
 
@@ -126,5 +128,106 @@ public sealed class Compressor : IDisposable
     public void Dispose()
     {
         handle.Dispose();
+    }
+}
+
+public sealed class BufferedDecompressor : IDisposable
+{
+    private bool disposed;
+    private readonly int maxBufferLen;
+    private IMemoryOwner<byte>? bufferOwner;
+    private Memory<byte> buffer;
+    private int lastWritten;
+    private readonly Decompressor decompressor;
+
+    public BufferedDecompressor(int initialBufferLen, int maxBufferLen)
+    {
+        if (initialBufferLen <= 0) throw new ArgumentOutOfRangeException(nameof(initialBufferLen));
+        if (maxBufferLen <= 0) throw new ArgumentOutOfRangeException(nameof(maxBufferLen));
+        if (initialBufferLen > maxBufferLen) throw new ArgumentOutOfRangeException(nameof(initialBufferLen));
+
+        this.maxBufferLen = maxBufferLen;
+
+        // Must be called after setting `maxBufferLen`.
+        EnsureBufferLength(initialBufferLen);
+
+        decompressor = new Decompressor();
+    }
+
+    private void EnsureBufferLength(int desiredLength)
+    {
+        if (desiredLength > maxBufferLen)
+            throw new ArgumentOutOfRangeException(nameof(desiredLength));
+
+        var currentLength = bufferOwner == null ? 0 : buffer.Length;
+
+        // We need to enlarge buffer.
+        if (currentLength < desiredLength)
+        {
+            var newBufferOwner = MemoryPool<byte>.Shared.Rent(desiredLength);
+            using var origBufferOwner = bufferOwner;  // This is automatically released.
+
+            bufferOwner = newBufferOwner;
+            buffer = newBufferOwner.Memory;
+        }
+    }
+
+    /// <summary>
+    /// Decompresses `input` into internal buffer.
+    /// If `DecompressionResult.Success` is returned
+    /// then decompressed data are available via `DecompressedData` property.
+    /// `DecompressedData` is valid till the next call of `Decompress`.
+    /// </summary>
+    public DecompressionResult Decompress(ReadOnlySpan<byte> input, out int read)
+    {
+        if (disposed)
+            throw new ObjectDisposedException(nameof(BufferedDecompressor));
+
+        // Ensure that `buffer` is big enough for decompressed data.
+        EnsureBufferLength((int)Math.Min((uint)input.Length * 2, (uint)maxBufferLen));
+
+        while (true)
+        {
+            // We don't give `Decompress` more than `maxBufferLen` bytes of `buffer`.
+            var output = buffer.Length > maxBufferLen ? buffer.Span[..maxBufferLen] : buffer.Span;
+            switch (decompressor.Decompress(input, output, out read, out lastWritten))
+            {
+                case DecompressionResult.Success:
+                    return DecompressionResult.Success;
+                case DecompressionResult.BadData:
+                    return DecompressionResult.BadData;
+                case DecompressionResult.InsufficientSpace:
+                    // Buffer has maximum length and it is not big enough.
+                    if (buffer.Length >= maxBufferLen)
+                        return DecompressionResult.InsufficientSpace;
+
+                    var newLength = (int)Math.Min((uint)buffer.Length * 2, (uint)maxBufferLen);
+                    EnsureBufferLength(newLength);
+
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+    }
+
+    /// <summary>
+    /// If the last call of `Decompress` returned `DecompressionResult.Success`
+    /// then this property returns decompressed data.
+    /// The content of the property is valid till the next call of `Decompress`.
+    ///
+    /// Note that `Decompress` may even reallocate internal buffer so
+    /// the old reference may point to deallocated old buffer.
+    /// </summary>
+    public Memory<byte> DecompressedData => buffer[..lastWritten];
+
+    public void Dispose()
+    {
+        disposed = true;
+        decompressor.Dispose();
+        buffer = Memory<byte>.Empty;
+        bufferOwner?.Dispose();
+        bufferOwner = null;
+        lastWritten = 0;
     }
 }
