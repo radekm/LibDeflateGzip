@@ -12,7 +12,7 @@ jobs:
     env:
       CC: ${{ matrix.compiler }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Install dependencies
       run: |
         sudo apt-get update
@@ -29,8 +29,8 @@ jobs:
         compiler: [gcc, clang]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: uraimo/run-on-arch-action@v2.2.0
+      - uses: actions/checkout@v3
+      - uses: uraimo/run-on-arch-action@v2.5.0
         with:
           arch: ${{ matrix.arch }}
           distro: bullseye
@@ -51,7 +51,7 @@ jobs:
     env:
       CFLAGS: -Werror -DLIBDEFLATE_ENABLE_ASSERTIONS
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - run: cmake -B build -DLIBDEFLATE_BUILD_TESTS=1
     - run: cmake --build build --verbose
     - run: DESTDIR=build/install cmake --install build --verbose
@@ -73,7 +73,7 @@ jobs:
     env:
       CFLAGS: -Werror -DLIBDEFLATE_ENABLE_ASSERTIONS
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: msys2/setup-msys2@v2
       with:
         msystem: ${{matrix.sys}}
@@ -101,7 +101,7 @@ jobs:
         toolset: [v143, ClangCL]
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: microsoft/setup-msbuild@v1.1
     - run: vcpkg install zlib:${{matrix.platform.vcpkg}}
     - run: >
@@ -129,7 +129,7 @@ jobs:
           toolset: ClangCL
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: microsoft/setup-msbuild@v1.1
     # Note: as per the CMake documentation, DESTDIR is unsupported on Windows.
     - run: >
@@ -143,7 +143,7 @@ jobs:
     name: Run clang static analyzer
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Install dependencies
       run: |
         sudo apt-get update
@@ -155,7 +155,7 @@ jobs:
     name: Run shellcheck
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Install dependencies
       run: |
         sudo apt-get update
@@ -169,7 +169,7 @@ jobs:
     env:
       CFLAGS: -Werror -DLIBDEFLATE_ENABLE_ASSERTIONS
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Install dependencies
       run: |
         sudo apt-get update
@@ -199,7 +199,7 @@ jobs:
     env:
       CFLAGS: -Werror -DLIBDEFLATE_ENABLE_ASSERTIONS
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - run: |
         scripts/cmake-helper.sh \
             -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_LATEST_HOME"/build/cmake/android.toolchain.cmake \
@@ -208,6 +208,34 @@ jobs:
             -DLIBDEFLATE_BUILD_TESTS=1
         cmake --build build --verbose
         DESTDIR=build/install cmake --install build --verbose
+
+  cpu-features-regression-tests:
+    name: Test building adler32.c and crc32.c with various flags
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc-arm-linux-gnueabihf gcc-aarch64-linux-gnu
+    - name: Compile tests
+      run: |
+        cflags="-O0 -Wall -Werror"
+        for file in lib/adler32.c lib/crc32.c; do
+          echo "arm32, default options, file=$file"
+          arm-linux-gnueabihf-gcc -c $cflags $file
+          for arch in armv4 armv4t armv5t armv5te armv5tej armv6 armv6j armv6k \
+                      armv6z armv6kz armv6zk armv6t2; do
+            echo "arm32, -march=$arch, file=$file"
+            arm-linux-gnueabihf-gcc -c -march=$arch -mfpu=vfp -marm $cflags $file
+          done
+          for arch in armv7 armv7-a armv7ve armv7-r armv7-m armv7e-m; do
+            echo "arm32, -march=$arch, file=$file"
+            arm-linux-gnueabihf-gcc -c -march=$arch -mfpu=vfp $cflags $file
+          done
+          echo "arm64, -mcpu=emag"
+          aarch64-linux-gnu-gcc -c -mcpu=emag $cflags $file
+        done
 
   fuzz-with-libFuzzer:
     name: Fuzz with libFuzzer (${{matrix.target}} ${{matrix.sanitizer}})
@@ -236,7 +264,7 @@ jobs:
           sanitizer:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Install dependencies
       run: |
         sudo apt-get update
