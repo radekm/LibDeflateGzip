@@ -2,12 +2,14 @@ const std = @import("std");
 
 pub fn build(b: *std.build.Builder) void {
     const target = b.standardTargetOptions(.{});
-    const mode = b.standardReleaseOptions();
+    const optimize = b.standardOptimizeOption(.{});
 
-    const lib = b.addSharedLibrary("deflate-gzip-native", null, .unversioned);
-    lib.setTarget(target);
-    lib.setBuildMode(mode);
-    lib.linkLibC();
+    const lib = b.addSharedLibrary(.{
+        .name = "deflate-gzip-native",
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+    });
     lib.force_pic = true;
     lib.addIncludePath("libdeflate");
     lib.addIncludePath("libdeflate/lib");
@@ -27,5 +29,5 @@ pub fn build(b: *std.build.Builder) void {
     }, &.{
         "-Wall",
     });
-    lib.install();
+    b.installArtifact(lib);
 }

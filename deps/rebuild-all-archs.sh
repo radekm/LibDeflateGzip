@@ -16,7 +16,7 @@ compile()
 
     rm -rf zig-cached zig-out
 
-    zig build -Drelease-fast -Dtarget="$target" -Dcpu="$cpu"
+    zig build -Doptimize=ReleaseFast -Dtarget="$target" -Dcpu="$cpu"
 
     dest="$runtimes_dir/$net_arch/native"
     mkdir -p "$dest"
