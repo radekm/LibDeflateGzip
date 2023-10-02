@@ -11,8 +11,8 @@ pub fn build(b: *std.build.Builder) void {
         .link_libc = true,
     });
     lib.force_pic = true;
-    lib.addIncludePath("libdeflate");
-    lib.addIncludePath("libdeflate/lib");
+    lib.addIncludePath(.{ .cwd_relative = "libdeflate" });
+    lib.addIncludePath(.{ .cwd_relative = "libdeflate/lib" });
     // All C files except 3 which are needed only for zlib format:
     // - `zlib_compress.c`,
     // - `zlib_decompress.c`,

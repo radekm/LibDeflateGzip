@@ -14,7 +14,7 @@ compile()
     echo "----------"
     echo "Compiling: target $target, CPU $cpu, .NET arch $net_arch, file $file"
 
-    rm -rf zig-cached zig-out
+    rm -rf zig-cache zig-out
 
     zig build -Doptimize=ReleaseFast -Dtarget="$target" -Dcpu="$cpu"
 
