@@ -8,7 +8,7 @@ endif()
 
 # With MSVC, don't automatically append /W3 to the compiler flags.
 # This makes it possible for the user to select /W4.
-if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.15")
+if(POLICY CMP0092)
     cmake_policy(SET CMP0092 NEW)
 endif()
 
@@ -114,6 +114,7 @@ if(LIBDEFLATE_COMPRESSION_SUPPORT)
          lib/hc_matchfinder.h
          lib/ht_matchfinder.h
          lib/matchfinder_common.h
+         lib/riscv/matchfinder_impl.h
          lib/x86/matchfinder_impl.h
     )
 endif()
@@ -127,9 +128,9 @@ endif()
 if(LIBDEFLATE_ZLIB_SUPPORT)
     list(APPEND LIB_SOURCES
          lib/adler32.c
-         lib/adler32_vec_template.h
          lib/arm/adler32_impl.h
          lib/x86/adler32_impl.h
+         lib/x86/adler32_template.h
          lib/zlib_constants.h
     )
     if(LIBDEFLATE_COMPRESSION_SUPPORT)
