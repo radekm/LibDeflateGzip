@@ -26,9 +26,9 @@ compile()
 rm -rf "$runtimes_dir"
 mkdir "$runtimes_dir"
 
-compile x86_64-linux-gnu   core_avx2 linux-x64 libdeflate-gzip-native.so
-compile x86_64-macos       core_avx2 osx-x64   libdeflate-gzip-native.dylib
-compile x86_64-windows-gnu core_avx2 win-x64   deflate-gzip-native.dll
+compile x86_64-linux-gnu   haswell linux-x64 libdeflate-gzip-native.so
+compile x86_64-macos       haswell osx-x64   libdeflate-gzip-native.dylib
+compile x86_64-windows-gnu haswell win-x64   deflate-gzip-native.dll
 
 compile aarch64-linux-gnu cortex_a53 linux-arm64 libdeflate-gzip-native.so
 compile aarch64-macos     apple_m1   osx-arm64   libdeflate-gzip-native.dylib

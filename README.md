@@ -9,7 +9,7 @@ Windows with ARM is currently not supported.
 
 # Building native libraries
 
-1. Install Zig 0.11.0.
+1. Install Zig 0.12.0-dev.3180+83e578a18.
 2. Go into `deps` directory and run `./rebuild-all-archs.sh` from there.
 
 # Updating libdeflate
