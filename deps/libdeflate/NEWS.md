@@ -1,5 +1,39 @@
 # libdeflate release notes
 
+## Version 1.23
+
+* Fixed bug introduced in 1.20 where incorrect checksums could be calculated if
+  libdeflate was compiled with clang at -O0 and run on a CPU supporting AVX512.
+
+* Fixed bug introduced in 1.20 where incorrect checksums could be calculated in
+  rare cases on macOS computers that support AVX512 and are running an older
+  version of macOS that contains a bug that corrupts AVX512 registers.  This
+  could occur only if code outside libdeflate enabled AVX512 in the thread.
+
+* Fixed build error when using -mno-evex512 with clang 18+ or gcc 14+.
+
+* Increased the minimum CMake version to 3.10.
+
+* Further optimized the x86 CRC code.
+
+## Version 1.22
+
+* The CMake-based build system now implements a workaround for gcc being paired
+  with a too-old binutils version.  This can prevent build errors.
+
+## Version 1.21
+
+* Fixed build error on x86 with gcc 8.1 and gcc 8.2.
+
+* Fixed build error on x86 when gcc 11 is paired with a binutils version that
+  doesn't support AVX-VNNI, e.g. as it is on RHEL 9.
+
+* Fixed build error on arm64 with gcc 6.
+
+* Fixed build error on arm64 with gcc 13.1 and later with some -mcpu options.
+
+* Enabled detection of dotprod support in Windows ARM64 builds.
+
 ## Version 1.20
 
 * Improved CRC-32 performance on recent x86 CPUs by adding
