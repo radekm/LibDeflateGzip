@@ -149,7 +149,7 @@ public sealed class BufferedDecompressor : IDisposable
         this.maxBufferLen = maxBufferLen;
 
         // Must be called after setting `maxBufferLen`.
-        EnsureBufferLength(initialBufferLen);
+        EnsureBufferLength(Math.Min(Math.Max(initialBufferLen, 4096), maxBufferLen));
 
         decompressor = new Decompressor();
     }
@@ -225,6 +225,99 @@ public sealed class BufferedDecompressor : IDisposable
     {
         disposed = true;
         decompressor.Dispose();
+        buffer = Memory<byte>.Empty;
+        bufferOwner?.Dispose();
+        bufferOwner = null;
+        lastWritten = 0;
+    }
+}
+
+public sealed class BufferedCompressor : IDisposable
+{
+    private bool disposed;
+    private readonly int maxBufferLen;
+    private IMemoryOwner<byte>? bufferOwner;
+    private Memory<byte> buffer;
+    private int lastWritten;
+    private readonly Compressor compressor;
+
+    public BufferedCompressor(int compressionLevel, int initialBufferLen, int maxBufferLen)
+    {
+        if (initialBufferLen <= 0) throw new ArgumentOutOfRangeException(nameof(initialBufferLen));
+        if (maxBufferLen <= 0) throw new ArgumentOutOfRangeException(nameof(maxBufferLen));
+        if (initialBufferLen > maxBufferLen) throw new ArgumentOutOfRangeException(nameof(initialBufferLen));
+
+        this.maxBufferLen = maxBufferLen;
+
+        // Must be called after setting `maxBufferLen`.
+        EnsureBufferLength(Math.Min(Math.Max(initialBufferLen, 4096), maxBufferLen));
+
+        compressor = new Compressor(compressionLevel);
+    }
+
+    private void EnsureBufferLength(int desiredLength)
+    {
+        if (desiredLength > maxBufferLen)
+            throw new ArgumentOutOfRangeException(nameof(desiredLength));
+
+        var currentLength = bufferOwner == null ? 0 : buffer.Length;
+
+        // We need to enlarge buffer.
+        if (currentLength < desiredLength)
+        {
+            var newBufferOwner = MemoryPool<byte>.Shared.Rent(desiredLength);
+            using var origBufferOwner = bufferOwner;  // This is automatically released.
+
+            bufferOwner = newBufferOwner;
+            buffer = newBufferOwner.Memory;
+        }
+    }
+
+    /// <summary>
+    /// Compresses `input` into internal buffer.
+    /// If `true` is returned
+    /// then compressed data are available via `CompressedData` property.
+    /// `CompressedData` is valid till the next call of `Compress`.
+    /// </summary>
+    public bool Compress(ReadOnlySpan<byte> input)
+    {
+        if (disposed)
+            throw new ObjectDisposedException(nameof(BufferedCompressor));
+
+        // Ensure that `buffer` is big enough for compressed data.
+        EnsureBufferLength((int)Math.Min((uint)input.Length * 2, (uint)maxBufferLen));
+
+        while (true)
+        {
+            // We don't give `Compress` more than `maxBufferLen` bytes of `buffer`.
+            var output = buffer.Length > maxBufferLen ? buffer.Span[..maxBufferLen] : buffer.Span;
+            lastWritten = compressor.Compress(input, output);
+
+            if (lastWritten > 0) return true;
+
+            // Buffer has maximum length and it is not big enough.
+            if (buffer.Length >= maxBufferLen) return false;
+
+            // Make buffer bigger and try compression again.
+            var newLength = (int)Math.Min((uint)buffer.Length * 2, (uint)maxBufferLen);
+            EnsureBufferLength(newLength);
+        }
+    }
+
+    /// <summary>
+    /// If the last call of `Compress` returned `true`
+    /// then this property returns compressed data.
+    /// The content of the property is valid till the next call of `Compress`.
+    ///
+    /// Note that `Compress` may even reallocate internal buffer so
+    /// the old reference may point to deallocated old buffer.
+    /// </summary>
+    public Memory<byte> CompressedData => buffer[..lastWritten];
+
+    public void Dispose()
+    {
+        disposed = true;
+        compressor.Dispose();
         buffer = Memory<byte>.Empty;
         bufferOwner?.Dispose();
         bufferOwner = null;
