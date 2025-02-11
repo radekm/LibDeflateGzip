@@ -10,8 +10,8 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .pic = true,
     });
-    lib.addIncludePath(.{ .path = "libdeflate" });
-    lib.addIncludePath(.{ .path = "libdeflate/lib" });
+    lib.addIncludePath(std.Build.LazyPath{ .cwd_relative = "libdeflate" });
+    lib.addIncludePath(std.Build.LazyPath{ .cwd_relative = "libdeflate/lib" });
     // All C files except 3 which are needed only for zlib format:
     // - `zlib_compress.c`,
     // - `zlib_decompress.c`,
