@@ -52,8 +52,16 @@
 /*
  * AVX-VNNI implementation.  This is used on CPUs that have AVX2 and AVX-VNNI
  * but don't have AVX-512, for example Intel Alder Lake.
+ *
+ * Unusually for a new CPU feature, gcc added support for the AVX-VNNI
+ * intrinsics (in gcc 11.1) slightly before binutils added support for
+ * assembling AVX-VNNI instructions (in binutils 2.36).  Distros can reasonably
+ * have gcc 11 with binutils 2.35.  Because of this issue, we check for gcc 12
+ * instead of gcc 11.  (libdeflate supports direct compilation without a
+ * configure step, so checking the binutils version is not always an option.)
  */
-#if GCC_PREREQ(11, 1) || CLANG_PREREQ(12, 0, 13000000) || MSVC_PREREQ(1930)
+#if (GCC_PREREQ(12, 1) || CLANG_PREREQ(12, 0, 13000000) || MSVC_PREREQ(1930)) && \
+	!defined(LIBDEFLATE_ASSEMBLER_DOES_NOT_SUPPORT_AVX_VNNI)
 #  define adler32_x86_avx2_vnni	adler32_x86_avx2_vnni
 #  define SUFFIX			   _avx2_vnni
 #  define ATTRIBUTES		_target_attribute("avx2,avxvnni")
@@ -63,7 +71,8 @@
 #  include "adler32_template.h"
 #endif
 
-#if GCC_PREREQ(8, 1) || CLANG_PREREQ(6, 0, 10000000) || MSVC_PREREQ(1920)
+#if (GCC_PREREQ(8, 1) || CLANG_PREREQ(6, 0, 10000000) || MSVC_PREREQ(1920)) && \
+	!defined(LIBDEFLATE_ASSEMBLER_DOES_NOT_SUPPORT_AVX512VNNI)
 /*
  * AVX512VNNI implementation using 256-bit vectors.  This is very similar to the
  * AVX-VNNI implementation but takes advantage of masking and more registers.
@@ -73,7 +82,7 @@
  */
 #  define adler32_x86_avx512_vl256_vnni	adler32_x86_avx512_vl256_vnni
 #  define SUFFIX				   _avx512_vl256_vnni
-#  define ATTRIBUTES		_target_attribute("avx512bw,avx512vl,avx512vnni")
+#  define ATTRIBUTES		_target_attribute("avx512bw,avx512vl,avx512vnni" NO_EVEX512)
 #  define VL			32
 #  define USE_VNNI		1
 #  define USE_AVX512		1
@@ -86,7 +95,7 @@
  */
 #  define adler32_x86_avx512_vl512_vnni	adler32_x86_avx512_vl512_vnni
 #  define SUFFIX				   _avx512_vl512_vnni
-#  define ATTRIBUTES		_target_attribute("avx512bw,avx512vnni")
+#  define ATTRIBUTES		_target_attribute("avx512bw,avx512vnni" EVEX512)
 #  define VL			64
 #  define USE_VNNI		1
 #  define USE_AVX512		1
