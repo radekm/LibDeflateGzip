@@ -12,7 +12,7 @@
         <Copyright>Copyright (c) Radek Micek 2022-2025</Copyright>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Description>
-            Wrapper for gzip routines from libdeflate v1.20.
+            Wrapper for gzip routines from libdeflate v1.23.
             Native code either needs x86-64 processor with AVX2 instructions
             or M1 processor on Mac with ARM or Cortex-A53 on Linux with ARM.
             Windows with ARM is currently not supported.
